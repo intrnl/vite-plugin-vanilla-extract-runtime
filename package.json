@@ -1,0 +1,38 @@
+{
+	"type": "module",
+	"name": "@intrnl/vite-plugin-vanilla-extract-runtime",
+	"description": "Alternate Vite plugin for Vanilla Extract styles",
+	"version": "0.1.0",
+	"license": "MIT",
+	"author": "intrnl",
+	"repository": {
+		"url": "https://codeberg.org/intrnl/vite-plugin-vanilla-extract-runtime"
+	},
+	"main": "src/index.js",
+	"types": "src/index.d.ts",
+	"sideEffects": false,
+	"files": [
+		"src/",
+		"runtime.js",
+		"README.md"
+	],
+	"dependencies": {
+		"@babel/core": "^7.21.0",
+		"@babel/plugin-syntax-typescript": "^7.20.0",
+		"@emotion/hash": "^0.9.0",
+		"@vanilla-extract/babel-plugin-debug-ids": "^1.0.1",
+		"esbuild": "^0.17.10",
+		"eval": "^0.1.8",
+		"javascript-stringify": "^2.1.0",
+		"magic-string": "^0.30.0"
+	},
+	"peerDependencies": {
+		"@vanilla-extract/css": "^1.9.5",
+		"vite": "^4.1.4"
+	},
+	"devDependencies": {
+		"@vanilla-extract/css": "^1.9.5",
+		"dprint": "^0.34.5",
+		"vite": "^4.1.4"
+	}
+}
