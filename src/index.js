@@ -123,7 +123,7 @@ ${key}.inject(${JSON.stringify(filenameKey)}, ${JSON.stringify(css)});
 				this.addWatchFile(file);
 			}
 
-			return { code: finalCode, moduleSideEffects: true };
+			return { code: js, moduleSideEffects: true };
 		},
 		renderChunk (code, chunk, opts) {
 			if (!code.includes(OPT_START)) {
