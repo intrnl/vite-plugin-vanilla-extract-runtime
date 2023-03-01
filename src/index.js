@@ -99,18 +99,24 @@ export function inject (id, content) {
 					});
 
 					css = result.code.trimEnd();
-					css = OPT_START + css + OPT_END;
+
+					if (css) {
+						css = OPT_START + css + OPT_END;
+					}
 				}
 				else {
 					css += `\n/*# sourceURL=${properId}?css */`;
 				}
 
-				const key = getRandomId();
-				js = `
-	import * as ${key} from '${runtimeId}';
-	${js};
-	${key}.inject(${JSON.stringify(filenameKey)}, ${JSON.stringify(css)});
-	`;
+				if (css) {
+					const key = getRandomId();
+
+					js = `
+import * as ${key} from '${runtimeId}';
+${js};
+${key}.inject(${JSON.stringify(filenameKey)}, ${JSON.stringify(css)});
+`;
+				}
 			}
 
 			for (const file of dependencies) {
