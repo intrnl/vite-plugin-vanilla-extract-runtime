@@ -130,52 +130,77 @@ ${key}.inject(${JSON.stringify(filenameKey)}, ${JSON.stringify(css)});
 				return null;
 			}
 
-			const key = hash.default(chunk.name);
-			const str = new MagicString(code);
+			// the reason why we added all that banner and footer is so that we can
+			// concatenate them all here, to reduce the amount of times a style is
+			// being appended to the DOM.
 
-			let callee;
-			let concat = '';
+			// depending on the user's code, it could potentially be problematic if
+			// there's anything like top-level await, the safer option seems to append
+			// everything to the last call usage instead of moving everything to the
+			// very end of the script.
+
+			const str = new MagicString(code);
+			const matches = Array.from(code.matchAll(RE_OPT_START));
 
 			let map = null;
-			let match;
 
-			while (match = RE_OPT_START.exec(code)) {
+			if (matches.length === 1) {
+				// fast path for single matches, just removes the key
+				let match = matches[0];
+
 				let cssStart = match.index + match[0].length;
 				let cssEnd = code.indexOf(OPT_END, cssStart);
 
-				let quoteStart = cssStart - OPT_START.length - 1;
-				let quote = code[quoteStart];
-
-				let stmtStart = match.index;
-				let stmtEnd = code.indexOf(')', cssEnd) + 1;
-
-				if (code[stmtEnd + 1] === ';') {
-					stmtEnd++;
-				}
-
-				let css = code.slice(cssStart, cssEnd);
-
-				// We can't use the value as is if there's any attempts on escaping.
-				if (css.includes('\\')) {
-					if (quote === '"') {
-						css = JSON.parse(quote + css + quote);
-					}
-					else {
-						const ast = this.parse(quote + css + quote);
-						const node = ast.body[0].expression;
-
-						css = node.value;
-					}
-				}
-
-				concat += css;
-				callee = match[1];
-
-				str.remove(stmtStart, stmtEnd);
+				str.update(cssStart - OPT_START.length, cssStart, '');
+				str.update(cssEnd, cssEnd + OPT_END.length, '');
 			}
+			else {
+				// it would be nice if we can skip the transformation on the last match,
+				// since really all we need to do there is append the concatenated
+				// styles from all before it.
 
-			if (concat.length > 0) {
-				str.append(`\n;${callee}(${JSON.stringify(key)}, ${JSON.stringify(concat)});`);
+				// just going to play it safe right now.
+
+				const key = hash.default(chunk.name);
+				let concat = '';
+
+				for (let idx = 0, len = matches.length; idx < len; idx++) {
+					let match = matches[idx];
+
+					let cssStart = match.index + match[0].length;
+					let cssEnd = code.indexOf(OPT_END, cssStart);
+
+					let stmtStart = match.index;
+					let stmtEnd = cssEnd + OPT_END.length + 1;
+
+					let quote = code[cssStart - OPT_START.length - 1];
+
+					let css = code.slice(cssStart, cssEnd);
+
+					if (code[stmtEnd + 1] === ';') {
+						stmtEnd++;
+					}
+
+					// we can't use the value as is if there's any attempts on escaping.
+					if (css.includes('\\')) {
+						if (quote === '"') {
+							css = JSON.parse(quote + css + quote);
+						}
+						else {
+							const ast = this.parse(quote + css + quote);
+							const node = ast.body[0].expression;
+
+							css = node.value;
+						}
+					}
+
+					concat += css;
+					str.remove(stmtStart, stmtEnd);
+
+					if (idx === len - 1) {
+						str.prependLeft(stmtStart, `${match[1]}(${JSON.stringify(key)}, ${JSON.stringify(concat)});`);
+					}
+				}
 			}
 
 			if (opts.sourcemap) {
