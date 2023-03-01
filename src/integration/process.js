@@ -54,7 +54,7 @@ function serializeVanillaModule (cssImports, cssExports, unusedCompositionRegex)
 	);
 
 	const moduleExports = Object.keys(cssExports).map((key) => {
-		const serializedExport = stringifyExports(
+		const serializedExport = '/*@__PURE__*/' + stringifyExports(
 			functionSerializationImports,
 			cssExports[key],
 			unusedCompositionRegex,
