@@ -17,7 +17,7 @@ const OPT_END = `/*__VE_RUNTIME_END__*/`;
  * @returns {import('vite').Plugin}
  */
 function vanillaExtractPlugin (options = {}) {
-	let { identifiers, esbuildOptions } = options;
+	let { outputCss = true, identifiers, esbuildOptions } = options;
 
 	let prod = false;
 	let cwd = '';
@@ -70,6 +70,7 @@ export function inject (id, content) {
 			const { source, dependencies } = await compileVanillaFile({
 				filename: properId,
 				cwd,
+				outputCss,
 				esbuildOptions,
 				identOption: identifiers,
 			});
@@ -90,25 +91,27 @@ export function inject (id, content) {
 				},
 			});
 
-			if (prod) {
-				const result = await esbuild.transform(css, {
-					loader: 'css',
-					minify: true,
-				});
+			if (outputCss) {
+				if (prod) {
+					const result = await esbuild.transform(css, {
+						loader: 'css',
+						minify: true,
+					});
 
-				css = result.code.trimEnd();
-				css = OPT_START + css + OPT_END;
-			}
-			else {
-				css += `\n/*# sourceURL=${properId}?css */`;
-			}
+					css = result.code.trimEnd();
+					css = OPT_START + css + OPT_END;
+				}
+				else {
+					css += `\n/*# sourceURL=${properId}?css */`;
+				}
 
-			const key = getRandomId();
-			const finalCode = `
-import * as ${key} from '${runtimeId}';
-${js};
-${key}.inject(${JSON.stringify(filenameKey)}, ${JSON.stringify(css)});
-`;
+				const key = getRandomId();
+				js = `
+	import * as ${key} from '${runtimeId}';
+	${js};
+	${key}.inject(${JSON.stringify(filenameKey)}, ${JSON.stringify(css)});
+	`;
+			}
 
 			for (const file of dependencies) {
 				this.addWatchFile(file);
