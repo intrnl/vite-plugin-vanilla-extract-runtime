@@ -74,6 +74,7 @@ export async function compileVanillaFile (options) {
 		],
 		loader: esbuildOptions.loader,
 		define: esbuildOptions.define,
+		alias: esbuildOptions.alias,
 	});
 
 	const { outputFiles, metafile } = result;
