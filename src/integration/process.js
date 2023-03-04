@@ -119,6 +119,10 @@ function stringifyExports (functionSerializationImports, value, unusedCompositio
 				);
 			}
 
+			if (valueType === 'function' && value.__ve_intrnl_fn__serializer__) {
+				return next(value);
+			}
+
 			if (valueType === 'function' && (value.__function_serializer__ || value.__recipe__)) {
 				const { importPath, importName, args } = value.__function_serializer__ || value.__recipe__;
 

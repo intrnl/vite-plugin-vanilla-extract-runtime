@@ -13,6 +13,7 @@
 	"sideEffects": false,
 	"files": [
 		"src/",
+		"recipe/",
 		"runtime.js",
 		"README.md"
 	],
