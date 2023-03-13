@@ -21,7 +21,7 @@ export function processVanillaFile (options) {
 	let css = '';
 
 	for (const [relname, sources] of cssByFileScope) {
-		const pathname = path.join(cwd, relname);
+		const pathname = path.posix.join(cwd, relname);
 		const isEntry = pathname === filename;
 
 		if (isEntry) {
