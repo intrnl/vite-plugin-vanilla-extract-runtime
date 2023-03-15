@@ -175,7 +175,7 @@ ${key}.inject(${JSON.stringify(filenameKey)}, ${JSON.stringify(css)});
 
 				// just going to play it safe right now.
 
-				const key = hash.default(chunk.name);
+				const key = 'c' + hash.default(chunk.name);
 				let concat = '';
 
 				for (let idx = 0, len = matches.length; idx < len; idx++) {
