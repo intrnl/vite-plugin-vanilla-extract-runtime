@@ -43,6 +43,20 @@ function vanillaExtractPlugin (options = {}) {
 			const [properId] = id.split('?');
 
 			if (properId === runtimeId) {
+				if (prod) {
+					return `
+const map = {};
+
+export const inject = (id, content) => {
+	if (!(id in map)) {
+		const style = map[id] = document.createElement('style');
+		style.textContent = content;
+		document.head.appendChild(style);
+	}
+};
+`;
+				}
+
 				return `
 export function inject (id, content) {
 	let elementId = 've' + id;
