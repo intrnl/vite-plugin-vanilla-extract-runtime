@@ -51,6 +51,7 @@ export const inject = (id, content) => {
 	if (!(id in map)) {
 		const style = map[id] = document.createElement('style');
 		style.textContent = content;
+		style.id = 've' + id;
 		document.head.appendChild(style);
 	}
 };
