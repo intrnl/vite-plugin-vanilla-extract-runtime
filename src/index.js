@@ -45,15 +45,34 @@ function vanillaExtractPlugin (options = {}) {
 			if (properId === runtimeId) {
 				if (prod) {
 					return `
-const map = {};
+const injected = {};
 
-export const inject = (id, content) => {
-	if (!(id in map)) {
-		const style = map[id] = document.createElement('style');
-		style.textContent = content;
-		style.id = 've' + id;
-		document.head.appendChild(style);
+export const inject = (map) => {
+	let css = '';
+	let id;
+
+	for (const key in map) {
+		if (key in injected) {
+			continue;
+		}
+
+		if (!id) {
+			id = key;
+		}
+
+		injected[key] = true;
+		css += map[key];
 	}
+
+	if (!css) {
+		return;
+	}
+
+	const style = document.createElement('style');
+	style.id = 've' + id;
+	style.textContent = css;
+
+	document.head.appendChild(style);
 };
 `;
 				}
@@ -126,11 +145,20 @@ export function inject (id, content) {
 				if (css) {
 					const key = getRandomId();
 
-					js = `
+					if (prod) {
+						js = `
+import * as ${key} from '${runtimeId}';
+${js};
+${key}.inject(${JSON.stringify(filenameKey + css)});
+`;
+					}
+					else {
+						js = `
 import * as ${key} from '${runtimeId}';
 ${js};
 ${key}.inject(${JSON.stringify(filenameKey)}, ${JSON.stringify(css)});
 `;
+					}
 				}
 			}
 
@@ -157,72 +185,53 @@ ${key}.inject(${JSON.stringify(filenameKey)}, ${JSON.stringify(css)});
 			const str = new MagicString(code);
 			const matches = Array.from(code.matchAll(RE_OPT_START));
 
-			let map = null;
+			let sourcemap = null;
+			let mapping = {};
 
-			if (matches.length === 1) {
-				// fast path for single matches, just removes the key
-				let match = matches[0];
+			for (let idx = 0, len = matches.length; idx < len; idx++) {
+				let match = matches[idx];
 
 				let cssStart = match.index + match[0].length;
 				let cssEnd = code.indexOf(OPT_END, cssStart);
 
-				str.update(cssStart - OPT_START.length, cssStart, '');
-				str.update(cssEnd, cssEnd + OPT_END.length, '');
-			}
-			else {
-				// it would be nice if we can skip the transformation on the last match,
-				// since really all we need to do there is append the concatenated
-				// styles from all before it.
+				let stmtStart = match.index;
+				let stmtEnd = cssEnd + OPT_END.length + 1;
 
-				// just going to play it safe right now.
+				let idStart = code.lastIndexOf('(', cssStart) + 2;
 
-				const key = 'c' + hash.default(chunk.name);
-				let concat = '';
+				let quote = code[idStart - 1];
 
-				for (let idx = 0, len = matches.length; idx < len; idx++) {
-					let match = matches[idx];
+				let id = prefixId(code.slice(idStart, cssStart - OPT_START.length));
+				let css = code.slice(cssStart, cssEnd);
 
-					let cssStart = match.index + match[0].length;
-					let cssEnd = code.indexOf(OPT_END, cssStart);
+				if (code[stmtEnd + 1] === ';') {
+					stmtEnd++;
+				}
 
-					let stmtStart = match.index;
-					let stmtEnd = cssEnd + OPT_END.length + 1;
-
-					let quote = code[cssStart - OPT_START.length - 1];
-
-					let css = code.slice(cssStart, cssEnd);
-
-					if (code[stmtEnd + 1] === ';') {
-						stmtEnd++;
+				// we can't use the value as is if there's any attempts on escaping.
+				if (css.includes('\\')) {
+					if (quote === '"') {
+						css = JSON.parse(quote + css + quote);
 					}
+					else {
+						const ast = this.parse(quote + css + quote);
+						const node = ast.body[0].expression;
 
-					// we can't use the value as is if there's any attempts on escaping.
-					if (css.includes('\\')) {
-						if (quote === '"') {
-							css = JSON.parse(quote + css + quote);
-						}
-						else {
-							const ast = this.parse(quote + css + quote);
-							const node = ast.body[0].expression;
-
-							css = node.value;
-						}
-					}
-
-					concat += css;
-					str.remove(stmtStart, stmtEnd);
-
-					if (idx === len - 1) {
-						str.prependLeft(stmtStart, `${match[1]}(${JSON.stringify(key)}, ${JSON.stringify(concat)});`);
+						css = node.value;
 					}
 				}
+
+				mapping[id] = css;
+				str.remove(stmtStart, stmtEnd);
 			}
+
+			str.prependLeft(matches[0].index, `${matches[0][1]}(${JSON.stringify(mapping)});`);
 
 			if (opts.sourcemap) {
-				map = str.generateMap();
+				sourcemap = str.generateMap();
 			}
 
-			return { code: str.toString(), map };
+			return { code: str.toString(), map: sourcemap };
 		},
 	};
 }
@@ -237,4 +246,12 @@ function relative (from, to) {
 	}
 
 	return pathname;
+}
+
+/**
+ * @param {string} id
+ */
+function prefixId (id) {
+	const first = id.charCodeAt(0);
+	return first >= 48 && first <= 57 ? '_' + id : id;
 }
