@@ -64,8 +64,8 @@ function serializeVanillaModule (cssImports, cssExports, unusedCompositionRegex)
 
 		if (key === 'default') {
 			return (
-				`var ${defaultExportName} = ${serializedExport};\n`
-				+ `export default ${defaultExportName};`
+				`var ${defaultExportName} = ${serializedExport};\n` +
+				`export default ${defaultExportName};`
 			);
 		}
 

@@ -7,7 +7,7 @@ import esbuild from 'esbuild';
 import typescriptSyntaxPlugin from '@babel/plugin-syntax-typescript';
 import veDebugIdPlugin from '@vanilla-extract/babel-plugin-debug-ids';
 
-import { getRandomId, RE_CSS_FILTER } from './utils.js';
+import { RE_CSS_FILTER, getRandomId } from './utils.js';
 
 /** @returns {esbuild.Plugin} */
 export const transformPlugin = ({ debug }) => ({

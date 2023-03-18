@@ -7,7 +7,7 @@ import MagicString from 'magic-string';
 import { compileVanillaFile } from './integration/compile.js';
 import { evaluateVanillaFile } from './integration/evaluate.js';
 import { processVanillaFile } from './integration/process.js';
-import { getRandomId, RE_CSS_FILTER } from './integration/utils.js';
+import { RE_CSS_FILTER, getRandomId } from './integration/utils.js';
 
 const RE_OPT_START = /\b([a-zA-Z0-9_$]+)\(.+?\/\*__VE_RUNTIME_START__\*\//g;
 const OPT_START = `/*__VE_RUNTIME_START__*/`;
