@@ -2,7 +2,7 @@
 	"type": "module",
 	"name": "@intrnl/vite-plugin-vanilla-extract-runtime",
 	"description": "Alternate Vite plugin for Vanilla Extract styles",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"license": "MIT",
 	"author": "intrnl",
 	"repository": {
