@@ -39,7 +39,7 @@ function vanillaExtractPlugin (options = {}) {
 
 			return null;
 		},
-		async load (id) {
+		async load (id, options) {
 			const [properId] = id.split('?');
 
 			if (properId === runtimeId) {
@@ -125,7 +125,7 @@ export function inject (id, content) {
 				},
 			});
 
-			if (outputCss) {
+			if (outputCss && !options.ssr) {
 				if (prod) {
 					const result = await esbuild.transform(css, {
 						loader: 'css',
